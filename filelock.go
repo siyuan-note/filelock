@@ -123,9 +123,12 @@ func CloseFile(file *os.File) (err error) {
 	filePath := file.Name()
 	v, _ := fileLocks.Load(filePath)
 	if nil == v {
-		return
+		return file.Close()
 	}
-	return v.(*LockItem).fl.Close()
+	lockItem := v.(*LockItem)
+	err = lockItem.fl.Unlock()
+	fileLocks.Delete(filePath)
+	return
 }
 
 func NoLockFileRead(filePath string) (data []byte, err error) {
