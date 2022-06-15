@@ -70,7 +70,7 @@ func init() {
 	}()
 }
 
-func ReleaseFileLocks(localAbsPath string, err error) {
+func ReleaseFileLocks(localAbsPath string) (err error) {
 	fileReadWriteLock.Lock()
 	defer fileReadWriteLock.Unlock()
 
@@ -82,6 +82,7 @@ func ReleaseFileLocks(localAbsPath string, err error) {
 		}
 		return true
 	})
+	return
 }
 
 func ReleaseAllFileLocks() (err error) {
