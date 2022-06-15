@@ -31,6 +31,14 @@ func ReleaseFileLocks(boxLocalPath string) {}
 
 func ReleaseAllFileLocks() {}
 
+func OpenFile(filePath string) (ret *os.File, error) {
+	return os.OpenFile(filePath, os.O_RDWR, 0644)
+}
+
+func CloseFile(file *os.File) (err error) {
+	return file.Close()
+}
+
 func NoLockFileRead(filePath string) (data []byte, err error) {
 	return os.ReadFile(filePath)
 }

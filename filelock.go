@@ -98,6 +98,36 @@ func ReleaseAllFileLocks() (err error) {
 	return
 }
 
+func OpenFile(filePath string) (*os.File, error) {
+	fileReadWriteLock.Lock()
+	defer fileReadWriteLock.Unlock()
+
+	v, ok := fileLocks.Load(filePath)
+	if !ok {
+		lock, lockErr := lockFile0(filePath)
+		if nil != lockErr {
+			return nil, lockErr
+		}
+		return lock.Fh(), nil
+	}
+	return v.(*LockItem).fl.Fh(), nil
+}
+
+func CloseFile(file *os.File) (err error) {
+	fileReadWriteLock.Lock()
+	defer fileReadWriteLock.Unlock()
+
+	if nil == file {
+		return
+	}
+	filePath := file.Name()
+	v, _ := fileLocks.Load(filePath)
+	if nil == v {
+		return
+	}
+	return v.(*LockItem).fl.Close()
+}
+
 func NoLockFileRead(filePath string) (data []byte, err error) {
 	fileReadWriteLock.Lock()
 	defer fileReadWriteLock.Unlock()
