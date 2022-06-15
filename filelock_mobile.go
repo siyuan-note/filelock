@@ -39,6 +39,10 @@ func CloseFile(file *os.File) (err error) {
 	return file.Close()
 }
 
+func RemoveFile(filePath string) (err error) {
+	return os.Remove(filePath)
+}
+
 func NoLockFileRead(filePath string) (data []byte, err error) {
 	return os.ReadFile(filePath)
 }

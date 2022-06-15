@@ -131,6 +131,19 @@ func CloseFile(file *os.File) (err error) {
 	return
 }
 
+func RemoveFile(filePath string) (err error) {
+	fileReadWriteLock.Lock()
+	defer fileReadWriteLock.Unlock()
+
+	_, ok := fileLocks.Load(filePath)
+	if ok {
+		if err = unlockFile0(filePath); nil != err {
+			return
+		}
+	}
+	return os.Remove(filePath)
+}
+
 func NoLockFileRead(filePath string) (data []byte, err error) {
 	fileReadWriteLock.Lock()
 	defer fileReadWriteLock.Unlock()
