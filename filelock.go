@@ -14,7 +14,7 @@
 
 //go:build !android && !ios
 
-package filesys
+package filelock
 
 import (
 	"errors"
