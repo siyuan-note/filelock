@@ -27,9 +27,13 @@ import (
 
 var ErrUnableLockFile = errors.New("unable to lock file")
 
-func ReleaseFileLocks(boxLocalPath string) {}
+func ReleaseFileLocks(localAbsPath string) error {
+	return nil
+}
 
-func ReleaseAllFileLocks() {}
+func ReleaseAllFileLocks() error {
+	return nil
+}
 
 func OpenFile(filePath string) (*os.File, error) {
 	return os.OpenFile(filePath, os.O_RDWR, 0644)
