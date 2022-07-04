@@ -12,8 +12,6 @@
 //
 // See the Mulan PSL v2 for more details.
 
-//go:build !android && !ios
-
 package filelock
 
 import (
