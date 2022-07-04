@@ -98,7 +98,7 @@ func ReleaseAllFileLocks() (err error) {
 	return
 }
 
-func OpenFile(filePath string) (*os.File, error) {
+func OpenFile(filePath string) (ret *os.File, err error) {
 	fileReadWriteLock.Lock()
 	defer fileReadWriteLock.Unlock()
 
@@ -110,7 +110,11 @@ func OpenFile(filePath string) (*os.File, error) {
 		}
 		return lock.Fh(), nil
 	}
-	return v.(*LockItem).fl.Fh(), nil
+	ret = v.(*LockItem).fl.Fh()
+	if _, err = ret.Seek(0, io.SeekStart); nil != err {
+		return
+	}
+	return
 }
 
 func CloseFile(file *os.File) (err error) {
