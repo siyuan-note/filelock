@@ -12,6 +12,8 @@
 //
 // See the Mulan PSL v2 for more details.
 
+//go:build !android && !ios
+
 package filelock
 
 import (
@@ -30,15 +32,13 @@ import (
 
 var (
 	ErrUnableLockFile = errors.New("unable to lock file")
-)
 
-var (
 	fileLocks         = sync.Map{}
 	expiration        = 5 * time.Minute
 	fileReadWriteLock = sync.Mutex{}
 )
 
-type LockItem struct {
+type lockItem struct {
 	fl      *flock.Flock
 	expired int64
 }
@@ -52,8 +52,8 @@ func init() {
 			now := time.Now().UnixNano()
 			var expiredKeys []string
 			fileLocks.Range(func(k, v interface{}) bool {
-				lockItem := v.(*LockItem)
-				if now > lockItem.expired {
+				lockItm := v.(*lockItem)
+				if now > lockItm.expired {
 					expiredKeys = append(expiredKeys, k.(string))
 				}
 				return true
@@ -108,7 +108,7 @@ func OpenFile(filePath string) (ret *os.File, err error) {
 		}
 		return lock.Fh(), nil
 	}
-	ret = v.(*LockItem).fl.Fh()
+	ret = v.(*lockItem).fl.Fh()
 	if _, err = ret.Seek(0, io.SeekStart); nil != err {
 		return
 	}
@@ -127,8 +127,8 @@ func CloseFile(file *os.File) (err error) {
 	if nil == v {
 		return file.Close()
 	}
-	lockItem := v.(*LockItem)
-	err = lockItem.fl.Unlock()
+	lockItm := v.(*lockItem)
+	err = lockItm.fl.Unlock()
 	fileLocks.Delete(filePath)
 	return
 }
@@ -154,8 +154,8 @@ func NoLockFileRead(filePath string) (data []byte, err error) {
 	if !ok {
 		return os.ReadFile(filePath)
 	}
-	lockItem := v.(*LockItem)
-	handle := lockItem.fl.Fh()
+	lockItm := v.(*lockItem)
+	handle := lockItm.fl.Fh()
 	if _, err = handle.Seek(0, io.SeekStart); nil != err {
 		return
 	}
@@ -193,8 +193,8 @@ func NoLockFileWrite(filePath string, data []byte) (err error) {
 		return os.WriteFile(filePath, data, 0644)
 	}
 
-	lockItem := v.(*LockItem)
-	handle := lockItem.fl.Fh()
+	lockItm := v.(*lockItem)
+	handle := lockItm.fl.Fh()
 	err = gulu.File.WriteFileSaferByHandle(handle, data)
 	return
 }
@@ -236,8 +236,8 @@ func unlockFile0(filePath string) (err error) {
 	if nil == v {
 		return
 	}
-	lockItem := v.(*LockItem)
-	err = lockItem.fl.Unlock()
+	lockItm := v.(*lockItem)
+	err = lockItm.fl.Unlock()
 	fileLocks.Delete(filePath)
 	return
 }
@@ -251,7 +251,7 @@ func LockFile(filePath string) (err error) {
 
 func lockFile0(filePath string) (lock *flock.Flock, err error) {
 	lockItemVal, _ := fileLocks.Load(filePath)
-	var lockItem *LockItem
+	var lockItm *lockItem
 	if nil == lockItemVal {
 		lock = flock.New(filePath)
 		var locked bool
@@ -274,12 +274,12 @@ func lockFile0(filePath string) (lock *flock.Flock, err error) {
 			err = multierr.Append(fmt.Errorf("unable to lock file [%s]", filePath), ErrUnableLockFile)
 			return
 		}
-		lockItem = &LockItem{fl: lock}
+		lockItm = &lockItem{fl: lock}
 	} else {
-		lockItem = lockItemVal.(*LockItem)
-		lock = lockItem.fl
+		lockItm = lockItemVal.(*lockItem)
+		lock = lockItm.fl
 	}
-	lockItem.expired = time.Now().Add(expiration).UnixNano()
-	fileLocks.Store(filePath, lockItem)
+	lockItm.expired = time.Now().Add(expiration).UnixNano()
+	fileLocks.Store(filePath, lockItm)
 	return
 }
