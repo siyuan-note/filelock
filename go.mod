@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/88250/flock v0.8.2
-	github.com/88250/gulu v1.2.2
+	github.com/88250/gulu v1.2.3-0.20220720144315-065ef35ec583
 	go.uber.org/multierr v1.8.0
 )
 
