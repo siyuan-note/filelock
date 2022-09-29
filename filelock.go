@@ -17,269 +17,82 @@
 package filelock
 
 import (
-	"errors"
-	"fmt"
-	"io"
 	"os"
-	"strings"
 	"sync"
-	"time"
 
-	"github.com/88250/flock"
 	"github.com/88250/gulu"
-	"go.uber.org/multierr"
 )
 
-var (
-	ErrUnableLockFile = errors.New("unable to lock file")
-
-	fileLocks         = sync.Map{}
-	expiration        = 5 * time.Minute
-	fileReadWriteLock = sync.Mutex{}
-)
-
-type lockItem struct {
-	fl      *flock.Flock
-	expired int64
-}
-
-func init() {
-	go func() {
-		// 锁定超时自动解锁
-		for range time.Tick(10 * time.Second) {
-			fileReadWriteLock.Lock()
-
-			now := time.Now().UnixNano()
-			var expiredKeys []string
-			fileLocks.Range(func(k, v interface{}) bool {
-				lockItm := v.(*lockItem)
-				if now > lockItm.expired {
-					expiredKeys = append(expiredKeys, k.(string))
-				}
-				return true
-			})
-
-			for _, k := range expiredKeys {
-				unlockFile0(k)
-			}
-
-			fileReadWriteLock.Unlock()
-		}
-	}()
-}
+var fileReadWriteLock = sync.Mutex{}
 
 func ReleaseFileLocks(localAbsPath string) (err error) {
 	fileReadWriteLock.Lock()
 	defer fileReadWriteLock.Unlock()
-
-	fileLocks.Range(func(k, v interface{}) bool {
-		if strings.HasPrefix(k.(string), localAbsPath) {
-			if unlockErr := unlockFile0(k.(string)); nil != unlockErr {
-				err = multierr.Append(err, unlockErr)
-			}
-		}
-		return true
-	})
 	return
 }
 
 func ReleaseAllFileLocks() (err error) {
 	fileReadWriteLock.Lock()
 	defer fileReadWriteLock.Unlock()
-
-	fileLocks.Range(func(k, v interface{}) bool {
-		if unlockErr := unlockFile0(k.(string)); nil != unlockErr {
-			err = multierr.Append(err, unlockErr)
-		}
-		return true
-	})
 	return
 }
 
 func OpenFile(filePath string) (ret *os.File, err error) {
 	fileReadWriteLock.Lock()
 	defer fileReadWriteLock.Unlock()
-
-	v, ok := fileLocks.Load(filePath)
-	if !ok {
-		lock, lockErr := lockFile0(filePath)
-		if nil != lockErr {
-			return nil, lockErr
-		}
-		return lock.Fh(), nil
-	}
-	ret = v.(*lockItem).fl.Fh()
-	if _, err = ret.Seek(0, io.SeekStart); nil != err {
-		return
-	}
-	return
+	return os.OpenFile(filePath, os.O_RDWR, 0644)
 }
 
 func CloseFile(file *os.File) (err error) {
 	fileReadWriteLock.Lock()
 	defer fileReadWriteLock.Unlock()
-
-	if nil == file {
-		return
-	}
-	filePath := file.Name()
-	v, _ := fileLocks.Load(filePath)
-	if nil == v {
-		return file.Close()
-	}
-	lockItm := v.(*lockItem)
-	err = lockItm.fl.Unlock()
-	fileLocks.Delete(filePath)
-	return
+	return file.Close()
 }
 
 func RemoveFile(filePath string) (err error) {
 	fileReadWriteLock.Lock()
 	defer fileReadWriteLock.Unlock()
-
-	_, ok := fileLocks.Load(filePath)
-	if ok {
-		if err = unlockFile0(filePath); nil != err {
-			return
-		}
-	}
 	return os.Remove(filePath)
 }
 
 func NoLockFileRead(filePath string) (data []byte, err error) {
 	fileReadWriteLock.Lock()
 	defer fileReadWriteLock.Unlock()
-
-	v, ok := fileLocks.Load(filePath)
-	if !ok {
-		return os.ReadFile(filePath)
-	}
-	lockItm := v.(*lockItem)
-	handle := lockItm.fl.Fh()
-	if _, err = handle.Seek(0, io.SeekStart); nil != err {
-		return
-	}
-	return io.ReadAll(handle)
+	return os.ReadFile(filePath)
 }
 
 func LockFileRead(filePath string) (data []byte, err error) {
 	fileReadWriteLock.Lock()
 	defer fileReadWriteLock.Unlock()
-
-	if !gulu.File.IsExist(filePath) {
-		err = os.ErrNotExist
-		return
-	}
-
-	lock, lockErr := lockFile0(filePath)
-	if nil != lockErr {
-		err = lockErr
-		return
-	}
-
-	handle := lock.Fh()
-	if _, err = handle.Seek(0, io.SeekStart); nil != err {
-		return
-	}
-	return io.ReadAll(handle)
+	return os.ReadFile(filePath)
 }
 
 func NoLockFileWrite(filePath string, data []byte) (err error) {
 	fileReadWriteLock.Lock()
 	defer fileReadWriteLock.Unlock()
-
-	v, ok := fileLocks.Load(filePath)
-	if !ok {
-		return os.WriteFile(filePath, data, 0644)
-	}
-
-	lockItm := v.(*lockItem)
-	handle := lockItm.fl.Fh()
-	err = gulu.File.WriteFileSaferByHandle(handle, data)
-	return
+	return gulu.File.WriteFileSafer(filePath, data, 0644)
 }
 
 func LockFileWrite(filePath string, data []byte) (err error) {
 	fileReadWriteLock.Lock()
 	defer fileReadWriteLock.Unlock()
+	return gulu.File.WriteFileSafer(filePath, data, 0644)
+}
 
-	lock, lockErr := lockFile0(filePath)
-	if nil != lockErr {
-		err = lockErr
-		return
-	}
+func LockFile(filePath string) (err error) {
+	fileReadWriteLock.Lock()
+	defer fileReadWriteLock.Unlock()
+	return
+}
 
-	handle := lock.Fh()
-	err = gulu.File.WriteFileSaferByHandle(handle, data)
+func UnlockFile(filePath string) (err error) {
+	fileReadWriteLock.Lock()
+	defer fileReadWriteLock.Unlock()
 	return
 }
 
 func IsLocked(filePath string) bool {
 	fileReadWriteLock.Lock()
 	defer fileReadWriteLock.Unlock()
-
-	v, _ := fileLocks.Load(filePath)
-	if nil == v {
-		return false
-	}
-	return true
-}
-
-func UnlockFile(filePath string) (err error) {
-	fileReadWriteLock.Lock()
-	defer fileReadWriteLock.Unlock()
-	return unlockFile0(filePath)
-}
-
-func unlockFile0(filePath string) (err error) {
-	v, _ := fileLocks.Load(filePath)
-	if nil == v {
-		return
-	}
-	lockItm := v.(*lockItem)
-	err = lockItm.fl.Unlock()
-	fileLocks.Delete(filePath)
-	return
-}
-
-func LockFile(filePath string) (err error) {
-	fileReadWriteLock.Lock()
-	defer fileReadWriteLock.Unlock()
-	_, err = lockFile0(filePath)
-	return
-}
-
-func lockFile0(filePath string) (lock *flock.Flock, err error) {
-	lockItemVal, _ := fileLocks.Load(filePath)
-	var lockItm *lockItem
-	if nil == lockItemVal {
-		lock = flock.New(filePath)
-		var locked bool
-		var lockErr error
-		for i := 0; i < 7; i++ {
-			locked, lockErr = lock.TryLock()
-			if nil != lockErr || !locked {
-				time.Sleep(100 * time.Millisecond)
-				continue
-			}
-			break
-		}
-
-		if nil != lockErr {
-			err = multierr.Append(fmt.Errorf("lock file [%s] failed: %s", filePath, lockErr), ErrUnableLockFile)
-			return
-		}
-
-		if !locked {
-			err = multierr.Append(fmt.Errorf("unable to lock file [%s]", filePath), ErrUnableLockFile)
-			return
-		}
-		lockItm = &lockItem{fl: lock}
-	} else {
-		lockItm = lockItemVal.(*lockItem)
-		lock = lockItm.fl
-	}
-	lockItm.expired = time.Now().Add(expiration).UnixNano()
-	fileLocks.Store(filePath, lockItm)
-	return
+	return false
 }
