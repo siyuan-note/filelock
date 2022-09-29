@@ -12,8 +12,6 @@
 //
 // See the Mulan PSL v2 for more details.
 
-//go:build !android && !ios
-
 package filelock
 
 import (
@@ -23,15 +21,11 @@ import (
 	"github.com/88250/gulu"
 )
 
+// TODO: 考虑改为每个文件一个锁以提高并发性能
+
 var fileReadWriteLock = sync.Mutex{}
 
-func ReleaseFileLocks(localAbsPath string) (err error) {
-	fileReadWriteLock.Lock()
-	defer fileReadWriteLock.Unlock()
-	return
-}
-
-func ReleaseAllFileLocks() (err error) {
+func ReleaseLock() (err error) {
 	fileReadWriteLock.Lock()
 	defer fileReadWriteLock.Unlock()
 	return
@@ -43,56 +37,20 @@ func OpenFile(filePath string) (ret *os.File, err error) {
 	return os.OpenFile(filePath, os.O_RDWR, 0644)
 }
 
-func CloseFile(file *os.File) (err error) {
-	fileReadWriteLock.Lock()
-	defer fileReadWriteLock.Unlock()
-	return file.Close()
-}
-
 func RemoveFile(filePath string) (err error) {
 	fileReadWriteLock.Lock()
 	defer fileReadWriteLock.Unlock()
 	return os.Remove(filePath)
 }
 
-func NoLockFileRead(filePath string) (data []byte, err error) {
+func FileRead(filePath string) (data []byte, err error) {
 	fileReadWriteLock.Lock()
 	defer fileReadWriteLock.Unlock()
 	return os.ReadFile(filePath)
 }
 
-func LockFileRead(filePath string) (data []byte, err error) {
-	fileReadWriteLock.Lock()
-	defer fileReadWriteLock.Unlock()
-	return os.ReadFile(filePath)
-}
-
-func NoLockFileWrite(filePath string, data []byte) (err error) {
+func FileWrite(filePath string, data []byte) (err error) {
 	fileReadWriteLock.Lock()
 	defer fileReadWriteLock.Unlock()
 	return gulu.File.WriteFileSafer(filePath, data, 0644)
-}
-
-func LockFileWrite(filePath string, data []byte) (err error) {
-	fileReadWriteLock.Lock()
-	defer fileReadWriteLock.Unlock()
-	return gulu.File.WriteFileSafer(filePath, data, 0644)
-}
-
-func LockFile(filePath string) (err error) {
-	fileReadWriteLock.Lock()
-	defer fileReadWriteLock.Unlock()
-	return
-}
-
-func UnlockFile(filePath string) (err error) {
-	fileReadWriteLock.Lock()
-	defer fileReadWriteLock.Unlock()
-	return
-}
-
-func IsLocked(filePath string) bool {
-	fileReadWriteLock.Lock()
-	defer fileReadWriteLock.Unlock()
-	return false
 }
