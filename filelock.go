@@ -18,10 +18,12 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"strings"
 	"sync"
 
 	"github.com/88250/gulu"
+	"github.com/siyuan-note/logging"
 	"go.uber.org/multierr"
 )
 
@@ -32,33 +34,76 @@ var (
 	fileReadWriteLock = sync.Mutex{}
 )
 
+func Move(src, dest string) (err error) {
+	fileReadWriteLock.Lock()
+	defer fileReadWriteLock.Unlock()
+	err = os.Rename(src, dest)
+	return
+}
+
+func RoboCopy(src, dest string) (err error) {
+	fileReadWriteLock.Lock()
+	defer fileReadWriteLock.Unlock()
+
+	if gulu.OS.IsWindows() {
+		robocopy := "robocopy"
+		cmd := exec.Command(robocopy, src, dest, "/DCOPY:T", "/E", "/IS", "/R:0", "/NFL", "/NDL", "/NJH", "/NJS", "/NP", "/NS", "/NC")
+		gulu.CmdAttr(cmd)
+		var output []byte
+		output, err = cmd.CombinedOutput()
+		if strings.Contains(err.Error(), "exit status 16") {
+			// 某些版本的 Windows 无法同步 https://github.com/siyuan-note/siyuan/issues/4197
+			return gulu.File.Copy(src, dest)
+		}
+
+		if nil != err && strings.Contains(err.Error(), exec.ErrNotFound.Error()) {
+			robocopy = os.Getenv("SystemRoot") + "\\System32\\" + "robocopy"
+			cmd = exec.Command(robocopy, src, dest, "/DCOPY:T", "/E", "/IS", "/R:0", "/NFL", "/NDL", "/NJH", "/NJS", "/NP", "/NS", "/NC")
+			gulu.CmdAttr(cmd)
+			output, err = cmd.CombinedOutput()
+		}
+		if nil == err ||
+			strings.Contains(err.Error(), "exit status 3") ||
+			strings.Contains(err.Error(), "exit status 1") ||
+			strings.Contains(err.Error(), "exit status 2") ||
+			strings.Contains(err.Error(), "exit status 5") ||
+			strings.Contains(err.Error(), "exit status 6") ||
+			strings.Contains(err.Error(), "exit status 7") {
+			return nil
+		}
+		logging.LogErrorf("robocopy data from [%s] to [%s] failed: %s %s", src, dest, string(output), err)
+	}
+	return gulu.File.Copy(src, dest)
+}
+
+func Copy(src, dest string) (err error) {
+	fileReadWriteLock.Lock()
+	defer fileReadWriteLock.Unlock()
+
+	err = gulu.File.Copy(src, dest)
+	if isBusy(err) {
+		err = multierr.Append(fmt.Errorf("copy [src=%s, dest=%s] failed: %s", src, dest, err), ErrUnableLockFile)
+	}
+	return
+}
+
+func Remove(p string) (err error) {
+	fileReadWriteLock.Lock()
+	defer fileReadWriteLock.Unlock()
+	err = os.RemoveAll(p)
+	if isBusy(err) {
+		err = multierr.Append(fmt.Errorf("remove file [%s] failed: %s", p, err), ErrUnableLockFile)
+	}
+	return
+}
+
 func ReleaseLock() (err error) {
 	fileReadWriteLock.Lock()
 	defer fileReadWriteLock.Unlock()
 	return
 }
 
-func OpenFile(filePath string) (ret *os.File, err error) {
-	fileReadWriteLock.Lock()
-	defer fileReadWriteLock.Unlock()
-	ret, err = os.OpenFile(filePath, os.O_RDWR, 0644)
-	if isBusy(err) {
-		err = multierr.Append(fmt.Errorf("open file [%s] failed: %s", filePath, err), ErrUnableLockFile)
-	}
-	return
-}
-
-func RemoveFile(filePath string) (err error) {
-	fileReadWriteLock.Lock()
-	defer fileReadWriteLock.Unlock()
-	err = os.Remove(filePath)
-	if isBusy(err) {
-		err = multierr.Append(fmt.Errorf("remove file [%s] failed: %s", filePath, err), ErrUnableLockFile)
-	}
-	return
-}
-
-func FileRead(filePath string) (data []byte, err error) {
+func ReadFile(filePath string) (data []byte, err error) {
 	fileReadWriteLock.Lock()
 	defer fileReadWriteLock.Unlock()
 	data, err = os.ReadFile(filePath)
@@ -68,7 +113,7 @@ func FileRead(filePath string) (data []byte, err error) {
 	return
 }
 
-func FileWrite(filePath string, data []byte) (err error) {
+func WriteFile(filePath string, data []byte) (err error) {
 	fileReadWriteLock.Lock()
 	defer fileReadWriteLock.Unlock()
 	err = gulu.File.WriteFileSafer(filePath, data, 0644)
