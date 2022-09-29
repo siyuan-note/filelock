@@ -17,6 +17,7 @@ package filelock
 import (
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"strings"
@@ -117,6 +118,17 @@ func WriteFile(filePath string, data []byte) (err error) {
 	fileReadWriteLock.Lock()
 	defer fileReadWriteLock.Unlock()
 	err = gulu.File.WriteFileSafer(filePath, data, 0644)
+	if isBusy(err) {
+		err = multierr.Append(fmt.Errorf("write file [%s] failed: %s", filePath, err), ErrUnableLockFile)
+	}
+	return
+}
+
+func WriteFileByReader(filePath string, reader io.Reader) (err error) {
+	fileReadWriteLock.Lock()
+	defer fileReadWriteLock.Unlock()
+
+	err = gulu.File.WriteFileSaferByReader(filePath, reader, 0644)
 	if isBusy(err) {
 		err = multierr.Append(fmt.Errorf("write file [%s] failed: %s", filePath, err), ErrUnableLockFile)
 	}
