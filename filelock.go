@@ -31,8 +31,8 @@ import (
 // TODO: 考虑改为每个文件一个锁以提高并发性能
 
 var (
-	ErrUnableLockFile = errors.New("unable to lock file")
-	fileReadWriteLock = sync.Mutex{}
+	ErrUnableAccessFile = errors.New("unable to access file")
+	fileReadWriteLock   = sync.Mutex{}
 )
 
 func Move(src, dest string) (err error) {
@@ -83,7 +83,7 @@ func Copy(src, dest string) (err error) {
 
 	err = gulu.File.Copy(src, dest)
 	if isBusy(err) {
-		err = multierr.Append(fmt.Errorf("copy [src=%s, dest=%s] failed: %s", src, dest, err), ErrUnableLockFile)
+		err = multierr.Append(fmt.Errorf("copy [src=%s, dest=%s] failed: %s", src, dest, err), ErrUnableAccessFile)
 	}
 	return
 }
@@ -93,7 +93,7 @@ func Remove(p string) (err error) {
 	defer fileReadWriteLock.Unlock()
 	err = os.RemoveAll(p)
 	if isBusy(err) {
-		err = multierr.Append(fmt.Errorf("remove file [%s] failed: %s", p, err), ErrUnableLockFile)
+		err = multierr.Append(fmt.Errorf("remove file [%s] failed: %s", p, err), ErrUnableAccessFile)
 	}
 	return
 }
@@ -109,7 +109,7 @@ func ReadFile(filePath string) (data []byte, err error) {
 	defer fileReadWriteLock.Unlock()
 	data, err = os.ReadFile(filePath)
 	if isBusy(err) {
-		err = multierr.Append(fmt.Errorf("read file [%s] failed: %s", filePath, err), ErrUnableLockFile)
+		err = multierr.Append(fmt.Errorf("read file [%s] failed: %s", filePath, err), ErrUnableAccessFile)
 	}
 	return
 }
@@ -119,7 +119,7 @@ func WriteFile(filePath string, data []byte) (err error) {
 	defer fileReadWriteLock.Unlock()
 	err = gulu.File.WriteFileSafer(filePath, data, 0644)
 	if isBusy(err) {
-		err = multierr.Append(fmt.Errorf("write file [%s] failed: %s", filePath, err), ErrUnableLockFile)
+		err = multierr.Append(fmt.Errorf("write file [%s] failed: %s", filePath, err), ErrUnableAccessFile)
 	}
 	return
 }
@@ -130,7 +130,7 @@ func WriteFileByReader(filePath string, reader io.Reader) (err error) {
 
 	err = gulu.File.WriteFileSaferByReader(filePath, reader, 0644)
 	if isBusy(err) {
-		err = multierr.Append(fmt.Errorf("write file [%s] failed: %s", filePath, err), ErrUnableLockFile)
+		err = multierr.Append(fmt.Errorf("write file [%s] failed: %s", filePath, err), ErrUnableAccessFile)
 	}
 	return
 }
