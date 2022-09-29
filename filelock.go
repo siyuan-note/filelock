@@ -15,15 +15,22 @@
 package filelock
 
 import (
+	"errors"
+	"fmt"
 	"os"
+	"strings"
 	"sync"
 
 	"github.com/88250/gulu"
+	"go.uber.org/multierr"
 )
 
 // TODO: 考虑改为每个文件一个锁以提高并发性能
 
-var fileReadWriteLock = sync.Mutex{}
+var (
+	ErrUnableLockFile = errors.New("unable to lock file")
+	fileReadWriteLock = sync.Mutex{}
+)
 
 func ReleaseLock() (err error) {
 	fileReadWriteLock.Lock()
@@ -34,23 +41,47 @@ func ReleaseLock() (err error) {
 func OpenFile(filePath string) (ret *os.File, err error) {
 	fileReadWriteLock.Lock()
 	defer fileReadWriteLock.Unlock()
-	return os.OpenFile(filePath, os.O_RDWR, 0644)
+	ret, err = os.OpenFile(filePath, os.O_RDWR, 0644)
+	if isBusy(err) {
+		err = multierr.Append(fmt.Errorf("open file [%s] failed: %s", filePath, err), ErrUnableLockFile)
+	}
+	return
 }
 
 func RemoveFile(filePath string) (err error) {
 	fileReadWriteLock.Lock()
 	defer fileReadWriteLock.Unlock()
-	return os.Remove(filePath)
+	err = os.Remove(filePath)
+	if isBusy(err) {
+		err = multierr.Append(fmt.Errorf("remove file [%s] failed: %s", filePath, err), ErrUnableLockFile)
+	}
+	return
 }
 
 func FileRead(filePath string) (data []byte, err error) {
 	fileReadWriteLock.Lock()
 	defer fileReadWriteLock.Unlock()
-	return os.ReadFile(filePath)
+	data, err = os.ReadFile(filePath)
+	if isBusy(err) {
+		err = multierr.Append(fmt.Errorf("read file [%s] failed: %s", filePath, err), ErrUnableLockFile)
+	}
+	return
 }
 
 func FileWrite(filePath string, data []byte) (err error) {
 	fileReadWriteLock.Lock()
 	defer fileReadWriteLock.Unlock()
-	return gulu.File.WriteFileSafer(filePath, data, 0644)
+	err = gulu.File.WriteFileSafer(filePath, data, 0644)
+	if isBusy(err) {
+		err = multierr.Append(fmt.Errorf("write file [%s] failed: %s", filePath, err), ErrUnableLockFile)
+	}
+	return
+}
+
+func isBusy(err error) bool {
+	if nil == err {
+		return false
+	}
+	errMsg := strings.ToLower(err.Error())
+	return strings.Contains(errMsg, "access is denied") || strings.Contains(errMsg, "used by another process")
 }
