@@ -3,7 +3,7 @@ module github.com/siyuan-note/filelock
 go 1.18
 
 require (
-	github.com/88250/gulu v1.2.3-0.20220929123404-da1dc91c9343
+	github.com/88250/gulu v1.2.3-0.20221007162906-ded80d955178
 	github.com/siyuan-note/logging v0.0.0-20220717040626-f796b05ee520
 	go.uber.org/multierr v1.8.0
 )

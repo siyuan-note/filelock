@@ -114,6 +114,16 @@ func ReadFile(filePath string) (data []byte, err error) {
 	return
 }
 
+func WriteFileWithoutChangeTime(filePath string, data []byte) (err error) {
+	fileReadWriteLock.Lock()
+	defer fileReadWriteLock.Unlock()
+	err = gulu.File.WriteFileSaferWithoutChangeTime(filePath, data, 0644)
+	if isBusy(err) {
+		err = multierr.Append(fmt.Errorf("write file [%s] failed: %s", filePath, err), ErrUnableAccessFile)
+	}
+	return
+}
+
 func WriteFile(filePath string, data []byte) (err error) {
 	fileReadWriteLock.Lock()
 	defer fileReadWriteLock.Unlock()
