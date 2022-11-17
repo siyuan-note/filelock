@@ -36,6 +36,10 @@ var (
 )
 
 func Move(src, dest string) (err error) {
+	if src == dest {
+		return nil
+	}
+
 	fileReadWriteLock.Lock()
 	defer fileReadWriteLock.Unlock()
 	err = os.Rename(src, dest)
