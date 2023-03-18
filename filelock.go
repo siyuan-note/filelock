@@ -35,17 +35,6 @@ var (
 	fileReadWriteLock   = sync.Mutex{}
 )
 
-func Move(src, dest string) (err error) {
-	if src == dest {
-		return nil
-	}
-
-	fileReadWriteLock.Lock()
-	defer fileReadWriteLock.Unlock()
-	err = os.Rename(src, dest)
-	return
-}
-
 func RoboCopy(src, dest string) (err error) {
 	fileReadWriteLock.Lock()
 	defer fileReadWriteLock.Unlock()
@@ -81,6 +70,20 @@ func RoboCopy(src, dest string) (err error) {
 	return gulu.File.Copy(src, dest)
 }
 
+func Move(src, dest string) (err error) {
+	if src == dest {
+		return nil
+	}
+
+	fileReadWriteLock.Lock()
+	defer fileReadWriteLock.Unlock()
+	err = os.Rename(src, dest)
+	if isBusy(err) {
+		err = multierr.Append(fmt.Errorf("move [src=%s, dest=%s] failed: %s", src, dest, err), ErrUnableAccessFile)
+	}
+	return
+}
+
 func Copy(src, dest string) (err error) {
 	fileReadWriteLock.Lock()
 	defer fileReadWriteLock.Unlock()
@@ -99,12 +102,6 @@ func Remove(p string) (err error) {
 	if isBusy(err) {
 		err = multierr.Append(fmt.Errorf("remove file [%s] failed: %s", p, err), ErrUnableAccessFile)
 	}
-	return
-}
-
-func ReleaseLock() (err error) {
-	fileReadWriteLock.Lock()
-	defer fileReadWriteLock.Unlock()
 	return
 }
 
