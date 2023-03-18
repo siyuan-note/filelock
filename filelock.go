@@ -15,8 +15,6 @@
 package filelock
 
 import (
-	"errors"
-	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -25,14 +23,12 @@ import (
 
 	"github.com/88250/gulu"
 	"github.com/siyuan-note/logging"
-	"go.uber.org/multierr"
 )
 
 // TODO: 考虑改为每个文件一个锁以提高并发性能
 
 var (
-	ErrUnableAccessFile = errors.New("unable to access file")
-	fileReadWriteLock   = sync.Mutex{}
+	fileReadWriteLock = sync.Mutex{}
 )
 
 func RoboCopy(src, dest string) (err error) {
@@ -79,7 +75,8 @@ func Move(src, dest string) (err error) {
 	defer fileReadWriteLock.Unlock()
 	err = os.Rename(src, dest)
 	if isBusy(err) {
-		err = multierr.Append(fmt.Errorf("move [src=%s, dest=%s] failed: %s", src, dest, err), ErrUnableAccessFile)
+		logging.LogFatalf(logging.ExitCodeFileSysInconsistent, "move [src=%s, dest=%s] failed: %s", src, dest, err)
+		return
 	}
 	return
 }
@@ -90,7 +87,8 @@ func Copy(src, dest string) (err error) {
 
 	err = gulu.File.Copy(src, dest)
 	if isBusy(err) {
-		err = multierr.Append(fmt.Errorf("copy [src=%s, dest=%s] failed: %s", src, dest, err), ErrUnableAccessFile)
+		logging.LogFatalf(logging.ExitCodeFileSysInconsistent, "copy [src=%s, dest=%s] failed: %s", src, dest, err)
+		return
 	}
 	return
 }
@@ -100,7 +98,8 @@ func Remove(p string) (err error) {
 	defer fileReadWriteLock.Unlock()
 	err = os.RemoveAll(p)
 	if isBusy(err) {
-		err = multierr.Append(fmt.Errorf("remove file [%s] failed: %s", p, err), ErrUnableAccessFile)
+		logging.LogFatalf(logging.ExitCodeFileSysInconsistent, "remove file [%s] failed: %s", p, err)
+		return
 	}
 	return
 }
@@ -110,7 +109,8 @@ func ReadFile(filePath string) (data []byte, err error) {
 	defer fileReadWriteLock.Unlock()
 	data, err = os.ReadFile(filePath)
 	if isBusy(err) {
-		err = multierr.Append(fmt.Errorf("read file [%s] failed: %s", filePath, err), ErrUnableAccessFile)
+		logging.LogFatalf(logging.ExitCodeFileSysInconsistent, "read file [%s] failed: %s", filePath, err)
+		return
 	}
 	return
 }
@@ -120,7 +120,8 @@ func WriteFileWithoutChangeTime(filePath string, data []byte) (err error) {
 	defer fileReadWriteLock.Unlock()
 	err = gulu.File.WriteFileSaferWithoutChangeTime(filePath, data, 0644)
 	if isBusy(err) {
-		err = multierr.Append(fmt.Errorf("write file [%s] failed: %s", filePath, err), ErrUnableAccessFile)
+		logging.LogFatalf(logging.ExitCodeFileSysInconsistent, "write file [%s] failed: %s", filePath, err)
+		return
 	}
 	return
 }
@@ -130,7 +131,8 @@ func WriteFile(filePath string, data []byte) (err error) {
 	defer fileReadWriteLock.Unlock()
 	err = gulu.File.WriteFileSafer(filePath, data, 0644)
 	if isBusy(err) {
-		err = multierr.Append(fmt.Errorf("write file [%s] failed: %s", filePath, err), ErrUnableAccessFile)
+		logging.LogFatalf(logging.ExitCodeFileSysInconsistent, "write file [%s] failed: %s", filePath, err)
+		return
 	}
 	return
 }
@@ -141,7 +143,7 @@ func WriteFileByReader(filePath string, reader io.Reader) (err error) {
 
 	err = gulu.File.WriteFileSaferByReader(filePath, reader, 0644)
 	if isBusy(err) {
-		err = multierr.Append(fmt.Errorf("write file [%s] failed: %s", filePath, err), ErrUnableAccessFile)
+		logging.LogFatalf(logging.ExitCodeFileSysInconsistent, "write file [%s] failed: %s", filePath, err)
 	}
 	return
 }
