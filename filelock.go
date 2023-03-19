@@ -15,6 +15,7 @@
 package filelock
 
 import (
+	"errors"
 	"io"
 	"os"
 	"os/exec"
@@ -74,7 +75,7 @@ func Move(src, dest string) (err error) {
 	fileReadWriteLock.Lock()
 	defer fileReadWriteLock.Unlock()
 	err = os.Rename(src, dest)
-	if isBusy(err) {
+	if isDenied(err) {
 		logging.LogFatalf(logging.ExitCodeFileSysErr, "move [src=%s, dest=%s] failed: %s", src, dest, err)
 		return
 	}
@@ -86,7 +87,7 @@ func Copy(src, dest string) (err error) {
 	defer fileReadWriteLock.Unlock()
 
 	err = gulu.File.Copy(src, dest)
-	if isBusy(err) {
+	if isDenied(err) {
 		logging.LogFatalf(logging.ExitCodeFileSysErr, "copy [src=%s, dest=%s] failed: %s", src, dest, err)
 		return
 	}
@@ -97,7 +98,7 @@ func Remove(p string) (err error) {
 	fileReadWriteLock.Lock()
 	defer fileReadWriteLock.Unlock()
 	err = os.RemoveAll(p)
-	if isBusy(err) {
+	if isDenied(err) {
 		logging.LogFatalf(logging.ExitCodeFileSysErr, "remove file [%s] failed: %s", p, err)
 		return
 	}
@@ -108,7 +109,7 @@ func ReadFile(filePath string) (data []byte, err error) {
 	fileReadWriteLock.Lock()
 	defer fileReadWriteLock.Unlock()
 	data, err = os.ReadFile(filePath)
-	if isBusy(err) {
+	if isDenied(err) {
 		logging.LogFatalf(logging.ExitCodeFileSysErr, "read file [%s] failed: %s", filePath, err)
 		return
 	}
@@ -119,7 +120,7 @@ func WriteFileWithoutChangeTime(filePath string, data []byte) (err error) {
 	fileReadWriteLock.Lock()
 	defer fileReadWriteLock.Unlock()
 	err = gulu.File.WriteFileSaferWithoutChangeTime(filePath, data, 0644)
-	if isBusy(err) {
+	if isDenied(err) {
 		logging.LogFatalf(logging.ExitCodeFileSysErr, "write file [%s] failed: %s", filePath, err)
 		return
 	}
@@ -130,7 +131,7 @@ func WriteFile(filePath string, data []byte) (err error) {
 	fileReadWriteLock.Lock()
 	defer fileReadWriteLock.Unlock()
 	err = gulu.File.WriteFileSafer(filePath, data, 0644)
-	if isBusy(err) {
+	if isDenied(err) {
 		logging.LogFatalf(logging.ExitCodeFileSysErr, "write file [%s] failed: %s", filePath, err)
 		return
 	}
@@ -142,16 +143,21 @@ func WriteFileByReader(filePath string, reader io.Reader) (err error) {
 	defer fileReadWriteLock.Unlock()
 
 	err = gulu.File.WriteFileSaferByReader(filePath, reader, 0644)
-	if isBusy(err) {
+	if isDenied(err) {
 		logging.LogFatalf(logging.ExitCodeFileSysErr, "write file [%s] failed: %s", filePath, err)
 	}
 	return
 }
 
-func isBusy(err error) bool {
+func isDenied(err error) bool {
 	if nil == err {
 		return false
 	}
+
+	if errors.Is(err, os.ErrPermission) {
+		return true
+	}
+
 	errMsg := strings.ToLower(err.Error())
 	return strings.Contains(errMsg, "access is denied") || strings.Contains(errMsg, "used by another process")
 }
