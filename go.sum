@@ -1,5 +1,5 @@
-github.com/88250/gulu v1.2.3-0.20230321111235-9885e68fb740 h1:CGr1s9BDJBaBnUHoTC9ZDLBxCd1BZ6/4YrUoG4++2r8=
-github.com/88250/gulu v1.2.3-0.20230321111235-9885e68fb740/go.mod h1:pTWnjt+6qUqNnP9xltswsJxgCBVu3C7eW09u48LWX0k=
+github.com/88250/gulu v1.2.3-0.20230321113152-38c4a3d73c37 h1:7ZMvlXDbH2sqaxowoAFcLjcdRN7ncVE0U1S2ukpUgac=
+github.com/88250/gulu v1.2.3-0.20230321113152-38c4a3d73c37/go.mod h1:pTWnjt+6qUqNnP9xltswsJxgCBVu3C7eW09u48LWX0k=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/getsentry/sentry-go v0.19.0 h1:BcCH3CN5tXt5aML+gwmbFwVptLLQA+eT866fCO9wVOM=
 github.com/getsentry/sentry-go v0.19.0/go.mod h1:y3+lGEFEFexZtpbG1GUE2WD/f9zGyKYwpEqryTOC/nE=
