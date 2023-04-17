@@ -94,6 +94,18 @@ func Copy(src, dest string) (err error) {
 	return
 }
 
+func CopyNewtimes(src, dest string) (err error) {
+	fileReadWriteLock.Lock()
+	defer fileReadWriteLock.Unlock()
+
+	err = gulu.File.CopyNewtimes(src, dest)
+	if isDenied(err) {
+		logging.LogFatalf(logging.ExitCodeFileSysErr, "copy [src=%s, dest=%s] failed: %s", src, dest, err)
+		return
+	}
+	return
+}
+
 func Remove(p string) (err error) {
 	fileReadWriteLock.Lock()
 	defer fileReadWriteLock.Unlock()
