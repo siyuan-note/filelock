@@ -106,6 +106,17 @@ func CopyNewtimes(src, dest string) (err error) {
 	return
 }
 
+func Rename(p, newP string) (err error) {
+	fileReadWriteLock.Lock()
+	defer fileReadWriteLock.Unlock()
+	err = os.Rename(p, newP)
+	if isDenied(err) {
+		logging.LogFatalf(logging.ExitCodeFileSysErr, "rename [p=%s, newP=%s] failed: %s", p, newP, err)
+		return
+	}
+	return
+}
+
 func Remove(p string) (err error) {
 	fileReadWriteLock.Lock()
 	defer fileReadWriteLock.Unlock()
