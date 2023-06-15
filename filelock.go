@@ -18,7 +18,6 @@ import (
 	"errors"
 	"io"
 	"os"
-	"os/exec"
 	"strings"
 	"sync"
 
@@ -31,41 +30,6 @@ import (
 var (
 	fileReadWriteLock = sync.Mutex{}
 )
-
-func RoboCopy(src, dest string) (err error) {
-	fileReadWriteLock.Lock()
-	defer fileReadWriteLock.Unlock()
-
-	if gulu.OS.IsWindows() {
-		robocopy := "robocopy"
-		cmd := exec.Command(robocopy, src, dest, "/DCOPY:T", "/E", "/IS", "/R:0", "/NFL", "/NDL", "/NJH", "/NJS", "/NP", "/NS", "/NC")
-		gulu.CmdAttr(cmd)
-		var output []byte
-		output, err = cmd.CombinedOutput()
-		if strings.Contains(err.Error(), "exit status 16") {
-			// 某些版本的 Windows 无法同步 https://github.com/siyuan-note/siyuan/issues/4197
-			return gulu.File.Copy(src, dest)
-		}
-
-		if nil != err && strings.Contains(err.Error(), exec.ErrNotFound.Error()) {
-			robocopy = os.Getenv("SystemRoot") + "\\System32\\" + "robocopy"
-			cmd = exec.Command(robocopy, src, dest, "/DCOPY:T", "/E", "/IS", "/R:0", "/NFL", "/NDL", "/NJH", "/NJS", "/NP", "/NS", "/NC")
-			gulu.CmdAttr(cmd)
-			output, err = cmd.CombinedOutput()
-		}
-		if nil == err ||
-			strings.Contains(err.Error(), "exit status 3") ||
-			strings.Contains(err.Error(), "exit status 1") ||
-			strings.Contains(err.Error(), "exit status 2") ||
-			strings.Contains(err.Error(), "exit status 5") ||
-			strings.Contains(err.Error(), "exit status 6") ||
-			strings.Contains(err.Error(), "exit status 7") {
-			return nil
-		}
-		logging.LogErrorf("robocopy data from [%s] to [%s] failed: %s %s", src, dest, string(output), err)
-	}
-	return gulu.File.Copy(src, dest)
-}
 
 func Move(src, dest string) (err error) {
 	if src == dest {
