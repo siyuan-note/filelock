@@ -31,21 +31,6 @@ var (
 	RWLock = sync.Mutex{}
 )
 
-func Move(src, dest string) (err error) {
-	if src == dest {
-		return nil
-	}
-
-	RWLock.Lock()
-	defer RWLock.Unlock()
-	err = os.Rename(src, dest)
-	if isDenied(err) {
-		logging.LogFatalf(logging.ExitCodeFileSysErr, "move [src=%s, dest=%s] failed: %s", src, dest, err)
-		return
-	}
-	return
-}
-
 func Copy(src, dest string) (err error) {
 	RWLock.Lock()
 	defer RWLock.Unlock()
@@ -71,6 +56,10 @@ func CopyNewtimes(src, dest string) (err error) {
 }
 
 func Rename(p, newP string) (err error) {
+	if p == newP {
+		return nil
+	}
+
 	RWLock.Lock()
 	defer RWLock.Unlock()
 	err = os.Rename(p, newP)
