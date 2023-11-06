@@ -31,6 +31,13 @@ var (
 	RWLock = sync.Mutex{}
 )
 
+func IsExist(filePath string) bool {
+	RWLock.Lock()
+	defer RWLock.Unlock()
+
+	return gulu.File.IsExist(filePath)
+}
+
 func Copy(src, dest string) (err error) {
 	RWLock.Lock()
 	defer RWLock.Unlock()
