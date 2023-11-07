@@ -69,6 +69,21 @@ func Rename(p, newP string) (err error) {
 
 	RWLock.Lock()
 	defer RWLock.Unlock()
+
+	if gulu.File.IsExist(newP) && gulu.File.IsDir(p) && gulu.File.IsDir(newP) {
+		err = gulu.File.Copy(p, newP)
+		if isDenied(err) {
+			logging.LogFatalf(logging.ExitCodeFileSysErr, "copy [p=%s, newP=%s] failed: %s", p, newP, err)
+			return
+		}
+		err = os.RemoveAll(p)
+		if isDenied(err) {
+			logging.LogFatalf(logging.ExitCodeFileSysErr, "remove [%s] failed: %s", p, err)
+			return
+		}
+		return
+	}
+
 	err = os.Rename(p, newP)
 	if isDenied(err) {
 		logging.LogFatalf(logging.ExitCodeFileSysErr, "rename [p=%s, newP=%s] failed: %s", p, newP, err)
