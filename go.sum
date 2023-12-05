@@ -1,5 +1,5 @@
-github.com/88250/gulu v1.2.3-0.20230501031728-4d62370997cd h1:PgbmnoTqfVbYyhUljovnAz6l/oWPlbM1d5yrkVDHO1w=
-github.com/88250/gulu v1.2.3-0.20230501031728-4d62370997cd/go.mod h1:pTWnjt+6qUqNnP9xltswsJxgCBVu3C7eW09u48LWX0k=
+github.com/88250/gulu v1.2.3-0.20231205093500-bcc43ee27cba h1:ypA1nYRPXm+oac3GnAziPOhMx49nTLtrajePha1CU0g=
+github.com/88250/gulu v1.2.3-0.20231205093500-bcc43ee27cba/go.mod h1:pTWnjt+6qUqNnP9xltswsJxgCBVu3C7eW09u48LWX0k=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/getsentry/sentry-go v0.25.0 h1:q6Eo+hS+yoJlTO3uu/azhQadsD8V+jQn2D8VvX1eOyI=
 github.com/getsentry/sentry-go v0.25.0/go.mod h1:lc76E2QywIyW8WuBnwl8Lc4bkmQH4+w1gwTf25trprY=
@@ -11,8 +11,8 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/siyuan-note/logging v0.0.0-20231030034701-8265764f00ff h1:5GcxrTOJTsusXOLhg4GuHWbEa4M5gu+CNfL0giwNjDM=
 github.com/siyuan-note/logging v0.0.0-20231030034701-8265764f00ff/go.mod h1:6mRFtAAvYPn3cDzqvyv+t8BVPGqpONDMMb5ywOhY1D4=
 github.com/stretchr/testify v1.8.2 h1:+h33VjcLVPDHtOdpUCuF+7gSuG3yGIftsP1YvFihtJ8=
-golang.org/x/sys v0.14.0 h1:Vz7Qs629MkJkGyHxUlRHizWJRG2j8fbQKjELVSNhy7Q=
-golang.org/x/sys v0.14.0/go.mod h1:/VUhepiaJMQUp4+oa/7Zr1D23ma6VTLIYjOOTFZPUcA=
+golang.org/x/sys v0.15.0 h1:h48lPFYpsTvQJZF4EKyI4aLHaev3CxivZmv7yZig9pc=
+golang.org/x/sys v0.15.0/go.mod h1:/VUhepiaJMQUp4+oa/7Zr1D23ma6VTLIYjOOTFZPUcA=
 golang.org/x/text v0.14.0 h1:ScX5w1eTa3QqT8oi6+ziP7dTV1S2+ALU0bI+0zXKWiQ=
 golang.org/x/text v0.14.0/go.mod h1:18ZOQIKpY8NJVqYksKHtTdi31H5itFRjB5/qKTNYzSU=
 gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
