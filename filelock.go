@@ -38,17 +38,6 @@ func Unlock(filePath string) {
 	unlock(filePath)
 }
 
-func IsLocked(filePath string) bool {
-	lockMutex.Lock()
-	defer lockMutex.Unlock()
-
-	mutex := operatingFiles[filePath]
-	if nil == mutex {
-		return false
-	}
-	return gulu.IsMutexLocked(mutex)
-}
-
 func OpenFile(filePath string, flag int, perm os.FileMode) (file *os.File, err error) {
 	lock(filePath)
 
@@ -65,48 +54,44 @@ func CloseFile(file *os.File) (err error) {
 		return
 	}
 
+	defer unlock(file.Name())
+
 	err = file.Close()
 	if isDenied(err) {
 		logging.LogFatalf(logging.ExitCodeFileSysErr, "close file [%s] failed: %s", file.Name(), err)
 		return
 	}
-
-	unlock(file.Name())
 	return
 }
 
 func IsExist(filePath string) (ret bool) {
 	lock(filePath)
+	defer unlock(filePath)
 
-	ret = gulu.File.IsExist(filePath)
-
-	unlock(filePath)
-	return
+	return gulu.File.IsExist(filePath)
 }
 
 func Copy(src, dest string) (err error) {
 	lock(src)
+	defer unlock(src)
 
 	err = gulu.File.Copy(src, dest)
 	if isDenied(err) {
 		logging.LogFatalf(logging.ExitCodeFileSysErr, "copy [src=%s, dest=%s] failed: %s", src, dest, err)
 		return
 	}
-
-	unlock(src)
 	return
 }
 
 func CopyNewtimes(src, dest string) (err error) {
 	lock(src)
+	defer unlock(src)
 
 	err = gulu.File.CopyNewtimes(src, dest)
 	if isDenied(err) {
 		logging.LogFatalf(logging.ExitCodeFileSysErr, "copy [src=%s, dest=%s] failed: %s", src, dest, err)
 		return
 	}
-
-	unlock(src)
 	return
 }
 
@@ -116,6 +101,7 @@ func Rename(p, newP string) (err error) {
 	}
 
 	lock(p)
+	defer unlock(p)
 
 	if gulu.File.IsExist(newP) && gulu.File.IsDir(p) && gulu.File.IsDir(newP) {
 		err = gulu.File.Copy(p, newP)
@@ -136,72 +122,65 @@ func Rename(p, newP string) (err error) {
 		logging.LogFatalf(logging.ExitCodeFileSysErr, "rename [p=%s, newP=%s] failed: %s", p, newP, err)
 		return
 	}
-
-	unlock(p)
 	return
 }
 
 func Remove(p string) (err error) {
 	lock(p)
+	defer unlock(p)
 
 	err = os.RemoveAll(p)
 	if isDenied(err) {
 		logging.LogFatalf(logging.ExitCodeFileSysErr, "remove file [%s] failed: %s", p, err)
 		return
 	}
-
-	unlock(p)
 	return
 }
 
 func ReadFile(filePath string) (data []byte, err error) {
 	lock(filePath)
+	defer unlock(filePath)
 
 	data, err = os.ReadFile(filePath)
 	if isDenied(err) {
 		logging.LogFatalf(logging.ExitCodeFileSysErr, "read file [%s] failed: %s", filePath, err)
 		return
 	}
-
-	unlock(filePath)
 	return
 }
 
 func WriteFileWithoutChangeTime(filePath string, data []byte) (err error) {
 	lock(filePath)
+	defer unlock(filePath)
 
 	err = gulu.File.WriteFileSaferWithoutChangeTime(filePath, data, 0644)
 	if isDenied(err) {
 		logging.LogFatalf(logging.ExitCodeFileSysErr, "write file [%s] failed: %s", filePath, err)
 		return
 	}
-
-	unlock(filePath)
 	return
 }
 
 func WriteFile(filePath string, data []byte) (err error) {
 	lock(filePath)
+	defer unlock(filePath)
 
 	err = gulu.File.WriteFileSafer(filePath, data, 0644)
 	if isDenied(err) {
 		logging.LogFatalf(logging.ExitCodeFileSysErr, "write file [%s] failed: %s", filePath, err)
 		return
 	}
-
-	unlock(filePath)
 	return
 }
 
 func WriteFileByReader(filePath string, reader io.Reader) (err error) {
 	lock(filePath)
+	defer unlock(filePath)
 
 	err = gulu.File.WriteFileSaferByReader(filePath, reader, 0644)
 	if isDenied(err) {
 		logging.LogFatalf(logging.ExitCodeFileSysErr, "write file [%s] failed: %s", filePath, err)
 	}
-
-	unlock(filePath)
 	return
 }
 
@@ -220,21 +199,19 @@ func isDenied(err error) bool {
 
 func lock(filePath string) {
 	lockMutex.Lock()
-	defer lockMutex.Unlock()
-
 	mutex := operatingFiles[filePath]
 	if nil == mutex {
 		mutex = &sync.Mutex{}
 		operatingFiles[filePath] = mutex
 	}
+	lockMutex.Unlock()
 	mutex.Lock()
 }
 
 func unlock(filePath string) {
 	lockMutex.Lock()
-	defer lockMutex.Unlock()
-
 	mutex := operatingFiles[filePath]
+	lockMutex.Unlock()
 	if nil != mutex {
 		mutex.Unlock()
 	}
