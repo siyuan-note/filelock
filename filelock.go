@@ -211,6 +211,7 @@ func lock(filePath string) {
 func unlock(filePath string) {
 	lockMutex.Lock()
 	mutex := operatingFiles[filePath]
+	delete(operatingFiles, filePath)
 	lockMutex.Unlock()
 	if nil != mutex {
 		mutex.Unlock()
