@@ -199,7 +199,7 @@ func lock(filePath string) {
 func unlock(filePath string) {
 	lockMutex.Lock()
 	mutex := operatingFiles[filePath]
-	delete(operatingFiles, filePath)
+	//delete(operatingFiles, filePath) 删了的话并发情况下会导致死锁，得考虑新的回收机制
 	lockMutex.Unlock()
 	if nil != mutex {
 		mutex.Unlock()
