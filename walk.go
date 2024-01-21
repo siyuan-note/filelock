@@ -37,7 +37,7 @@ func Walk(root string, fn filepath.WalkFunc) error {
 		start := time.Now()
 		req := httpclient.NewCloudFileRequest2m()
 		req.SetBody(map[string]interface{}{"dir": root})
-		resp, err := req.Post("http://127.0.0.1:" + fmt.Sprintf("%d", AndroidServerPort) + "/api/walkDir")
+		resp, err := req.Post("http://[::1]:" + fmt.Sprintf("%d", AndroidServerPort) + "/api/walkDir")
 		logging.LogInfof("walk dir [%s] cost [%s]", root, time.Since(start))
 		if nil != err {
 			logging.LogErrorf("walk dir [%s] failed: %s", root, err)
