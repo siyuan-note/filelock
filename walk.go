@@ -1,0 +1,118 @@
+// FileLock - Read and write files with lock.
+// Copyright (c) 2022-present, b3log.org
+//
+// FileLock is licensed under Mulan PSL v2.
+// You can use this software according to the terms and conditions of the Mulan PSL v2.
+// You may obtain a copy of Mulan PSL v2 at:
+//         http://license.coscl.org.cn/MulanPSL2
+//
+// THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+// EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+// MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+//
+// See the Mulan PSL v2 for more details.
+
+package filelock
+
+import (
+	"errors"
+	"fmt"
+	"io/fs"
+	"path/filepath"
+	"runtime"
+	"strings"
+	"time"
+
+	"github.com/siyuan-note/httpclient"
+	"github.com/siyuan-note/logging"
+)
+
+var AndroidServerPort = 6906 // Android HTTP 服务器端口
+
+func Walk(root string, fn filepath.WalkFunc) error {
+	if strings.Contains(runtime.GOOS, "android") {
+		// Android 系统上统一使用 Android HTTP 服务器来遍历文件
+		// Data sync may cause data loss on Android 14 https://github.com/siyuan-note/siyuan/issues/10205
+
+		start := time.Now()
+		req := httpclient.NewCloudFileRequest2m()
+		req.SetBody(map[string]interface{}{"dir": root})
+		resp, err := req.Post("http://127.0.0.1:" + fmt.Sprintf("%d", AndroidServerPort) + "/api/walkDir")
+		logging.LogInfof("walk dir [%s] cost [%s]", root, time.Since(start))
+		if nil != err {
+			logging.LogErrorf("walk dir [%s] failed: %s", root, err)
+			return filepath.Walk(root, fn)
+		}
+		if 200 != resp.StatusCode {
+			logging.LogErrorf("walk dir [%s] failed: %d", root, resp.StatusCode)
+			return filepath.Walk(root, fn)
+		}
+
+		result := map[string]interface{}{}
+		if err = resp.UnmarshalJson(&result); nil != err {
+			logging.LogErrorf("walk dir [%s] failed: %s", root, err)
+			return errors.New("walk dir failed")
+		}
+
+		code := result["code"].(float64)
+		if 0 != code {
+			logging.LogErrorf("walk dir [%s] failed: %f", root, code)
+			return errors.New("walk dir failed")
+		}
+
+		data := result["data"].(map[string]interface{})
+		filesData := data["files"].([]interface{})
+		var infos []*RemoteFile
+		for _, f := range filesData {
+			info := &RemoteFile{info: f.(map[string]interface{})}
+			infos = append(infos, info)
+		}
+
+		for _, info := range infos {
+			p := info.Path()
+			err = fn(p, info, nil)
+			if nil != err {
+				logging.LogErrorf("walk dir [%s] failed: %s", p, err)
+				return err
+			}
+		}
+		return nil
+	}
+	return filepath.Walk(root, fn)
+}
+
+type RemoteFile struct {
+	info map[string]interface{}
+}
+
+func (f *RemoteFile) Path() string {
+	return f.info["path"].(string)
+}
+
+func (f *RemoteFile) Name() string {
+	return f.info["name"].(string)
+}
+
+func (f *RemoteFile) Size() int64 {
+	return int64(f.info["size"].(float64))
+}
+
+func (f *RemoteFile) Mode() fs.FileMode {
+	if f.IsDir() {
+		return 0755
+	}
+	return 0644
+}
+
+func (f *RemoteFile) ModTime() time.Time {
+	ms := int64(f.info["updated"].(float64))
+	return time.UnixMilli(ms)
+}
+
+func (f *RemoteFile) IsDir() bool {
+	return f.info["isDir"].(bool)
+}
+
+func (f *RemoteFile) Sys() interface{} {
+	return nil
+}
