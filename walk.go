@@ -68,11 +68,23 @@ func Walk(root string, fn filepath.WalkFunc) error {
 			infos = append(infos, info)
 		}
 
+		skipFiles := map[string]bool{}
 		for _, info := range infos {
 			p := info.Path()
+			skip := false
+			for skipFile, _ := range skipFiles {
+				if strings.HasPrefix(p, skipFile) {
+					skip = true
+				}
+			}
+			if skip {
+				continue
+			}
+
 			err = fn(p, info, nil)
 			if nil != err {
 				if errors.Is(err, fs.SkipDir) || errors.Is(err, fs.SkipAll) {
+					skipFiles[p] = true
 					continue
 				}
 
