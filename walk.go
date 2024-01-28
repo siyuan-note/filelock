@@ -83,6 +83,7 @@ func Walk(root string, fn filepath.WalkFunc) error {
 				}
 			}
 			if skip {
+				//logging.LogInfof("skip walk [%s]", p)
 				continue
 			}
 
@@ -90,10 +91,11 @@ func Walk(root string, fn filepath.WalkFunc) error {
 			if nil != err {
 				if errors.Is(err, fs.SkipDir) || errors.Is(err, fs.SkipAll) {
 					skipFiles[p] = true
+					//logging.LogInfof("skip walk [%s]", p)
 					continue
 				}
 
-				logging.LogErrorf("walk dir [%s] failed: %s", p, err)
+				logging.LogErrorf("walk [%s] failed: %s", p, err)
 				return err
 			}
 		}
