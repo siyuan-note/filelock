@@ -51,13 +51,18 @@ func Walk(root string, fn filepath.WalkFunc) error {
 		result := map[string]interface{}{}
 		if err = resp.UnmarshalJson(&result); nil != err {
 			logging.LogErrorf("walk dir [%s] failed: %s", root, err)
-			return filepath.Walk(root, fn)
+			return errors.New("walk dir failed")
 		}
 
 		code := result["code"].(float64)
 		if 0 != code {
-			logging.LogErrorf("walk dir [%s] failed: %f", root, code)
-			return filepath.Walk(root, fn)
+			msgResult := result["msg"]
+			var msg string
+			if nil != msgResult {
+				msg = msgResult.(string)
+			}
+			logging.LogErrorf("walk dir [%s] failed: %f, %s", root, code, msg)
+			return errors.New("walk dir failed")
 		}
 
 		data := result["data"].(map[string]interface{})
