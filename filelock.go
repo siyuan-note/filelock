@@ -71,6 +71,13 @@ func IsExist(filePath string) (ret bool) {
 	return gulu.File.IsExist(filePath)
 }
 
+func IsHidden(filePath string) (ret bool) {
+	lock(filePath)
+	defer unlock(filePath)
+
+	return gulu.File.IsHidden(filePath)
+}
+
 func Copy(src, dest string) (err error) {
 	lock(src)
 	defer unlock(src)
