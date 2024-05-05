@@ -5,7 +5,7 @@ go 1.21
 toolchain go1.21.6
 
 require (
-	github.com/88250/gulu v1.2.3-0.20240505144956-d772973c92dd
+	github.com/88250/gulu v1.2.3-0.20240505150113-bc43bd50f866
 	github.com/siyuan-note/httpclient v0.0.0-20240429013218-3caa1f89f9ed
 	github.com/siyuan-note/logging v0.0.0-20240505035402-6430d57006a2
 )
