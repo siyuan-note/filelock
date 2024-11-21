@@ -29,7 +29,7 @@ import (
 
 var AndroidServerPort = 6906 // Android HTTP 服务器端口
 
-func Walk(root string, fn filepath.WalkFunc) error {
+func Walk(root string, fn fs.WalkDirFunc) error {
 	if strings.Contains(runtime.GOOS, "android") {
 		// Android 系统上统一使用 Android HTTP 服务器来遍历文件
 		// Data sync may cause data loss on Android 14 https://github.com/siyuan-note/siyuan/issues/10205
@@ -42,11 +42,11 @@ func Walk(root string, fn filepath.WalkFunc) error {
 		logging.LogInfof("walk dir [%s] cost [%s]", root, time.Since(start))
 		if nil != err {
 			logging.LogErrorf("walk dir [%s] failed: %s", root, err)
-			return filepath.Walk(root, fn)
+			return filepath.WalkDir(root, fn)
 		}
 		if 200 != resp.StatusCode {
 			logging.LogErrorf("walk dir [%s] failed: %d", root, resp.StatusCode)
-			return filepath.Walk(root, fn)
+			return filepath.WalkDir(root, fn)
 		}
 
 		result := map[string]interface{}{}
@@ -88,7 +88,7 @@ func Walk(root string, fn filepath.WalkFunc) error {
 				continue
 			}
 
-			err = fn(p, info, nil)
+			err = fn(p, fs.FileInfoToDirEntry(info), nil)
 			if nil != err {
 				if errors.Is(err, fs.SkipDir) || errors.Is(err, fs.SkipAll) {
 					skipFiles[p] = true
@@ -102,7 +102,7 @@ func Walk(root string, fn filepath.WalkFunc) error {
 		}
 		return nil
 	}
-	return filepath.Walk(root, fn)
+	return filepath.WalkDir(root, fn)
 }
 
 type RemoteFile struct {
