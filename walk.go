@@ -27,9 +27,16 @@ import (
 	"github.com/siyuan-note/logging"
 )
 
-var AndroidServerPort = 6906 // Android HTTP 服务器端口
+var (
+	Container         = ""
+	AndroidServerPort = 6906 // Android HTTP 服务器端口
+)
 
 func Walk(root string, fn fs.WalkDirFunc) error {
+	if "harmony" == Container {
+		return filepath.WalkDir(root, fn)
+	}
+
 	if strings.Contains(runtime.GOOS, "android") {
 		// Android 系统上统一使用 Android HTTP 服务器来遍历文件
 		// Data sync may cause data loss on Android 14 https://github.com/siyuan-note/siyuan/issues/10205
