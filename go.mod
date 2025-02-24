@@ -7,13 +7,12 @@ toolchain go1.24.0
 require (
 	github.com/88250/gulu v1.2.3-0.20241212012748-c4dc08fe45ec
 	github.com/siyuan-note/httpclient v0.0.0-20250224040600-375a71852c6d
-	github.com/siyuan-note/logging v0.0.0-20241212013108-623e0bb0bcd9
+	github.com/siyuan-note/logging v0.0.0-20241218085028-6514639a9742
 )
 
 require (
 	github.com/andybalholm/brotli v1.1.1 // indirect
 	github.com/cloudflare/circl v1.6.0 // indirect
-	github.com/getsentry/sentry-go v0.30.0 // indirect
 	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
 	github.com/google/pprof v0.0.0-20250208200701-d0013a598941 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
