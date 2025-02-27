@@ -5,7 +5,7 @@ go 1.23.0
 toolchain go1.24.0
 
 require (
-	github.com/88250/gulu v1.2.3-0.20241212012748-c4dc08fe45ec
+	github.com/88250/gulu v1.2.3-0.20250227144607-7f4570b0d689
 	github.com/siyuan-note/httpclient v0.0.0-20250224040600-375a71852c6d
 	github.com/siyuan-note/logging v0.0.0-20241218085028-6514639a9742
 )
@@ -24,7 +24,7 @@ require (
 	github.com/quic-go/quic-go v0.50.0 // indirect
 	github.com/refraction-networking/utls v1.6.7 // indirect
 	go.uber.org/mock v0.5.0 // indirect
-	golang.org/x/crypto v0.34.0 // indirect
+	golang.org/x/crypto v0.35.0 // indirect
 	golang.org/x/exp v0.0.0-20250218142911-aa4b98e5adaa // indirect
 	golang.org/x/mod v0.23.0 // indirect
 	golang.org/x/net v0.35.0 // indirect
