@@ -1,35 +1,29 @@
 module github.com/siyuan-note/filelock
 
-go 1.23.0
+go 1.24.0
 
-toolchain go1.24.0
+toolchain go1.24.4
 
 require (
 	github.com/88250/gulu v1.2.3-0.20250227144607-7f4570b0d689
-	github.com/siyuan-note/httpclient v0.0.0-20250224040600-375a71852c6d
-	github.com/siyuan-note/logging v0.0.0-20241218085028-6514639a9742
+	github.com/siyuan-note/httpclient v0.0.0-20250930140902-da745d9bc9f0
+	github.com/siyuan-note/logging v0.0.0-20250425042449-b96c40249b54
 )
 
 require (
-	github.com/andybalholm/brotli v1.1.1 // indirect
-	github.com/cloudflare/circl v1.6.0 // indirect
-	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
-	github.com/google/pprof v0.0.0-20250208200701-d0013a598941 // indirect
-	github.com/hashicorp/errwrap v1.1.0 // indirect
-	github.com/hashicorp/go-multierror v1.1.1 // indirect
-	github.com/imroc/req/v3 v3.49.1 // indirect
+	github.com/andybalholm/brotli v1.2.0 // indirect
+	github.com/google/go-querystring v1.1.0 // indirect
+	github.com/icholy/digest v1.1.0 // indirect
+	github.com/imroc/req/v3 v3.55.0 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
-	github.com/onsi/ginkgo/v2 v2.22.2 // indirect
 	github.com/quic-go/qpack v0.5.1 // indirect
-	github.com/quic-go/quic-go v0.50.0 // indirect
-	github.com/refraction-networking/utls v1.6.7 // indirect
-	go.uber.org/mock v0.5.0 // indirect
-	golang.org/x/crypto v0.35.0 // indirect
-	golang.org/x/exp v0.0.0-20250218142911-aa4b98e5adaa // indirect
-	golang.org/x/mod v0.23.0 // indirect
-	golang.org/x/net v0.35.0 // indirect
-	golang.org/x/sync v0.11.0 // indirect
-	golang.org/x/sys v0.30.0 // indirect
-	golang.org/x/text v0.22.0 // indirect
-	golang.org/x/tools v0.30.0 // indirect
+	github.com/quic-go/quic-go v0.55.0 // indirect
+	github.com/refraction-networking/utls v1.8.0 // indirect
+	golang.org/x/crypto v0.43.0 // indirect
+	golang.org/x/mod v0.29.0 // indirect
+	golang.org/x/net v0.46.0 // indirect
+	golang.org/x/sync v0.17.0 // indirect
+	golang.org/x/sys v0.37.0 // indirect
+	golang.org/x/text v0.30.0 // indirect
+	golang.org/x/tools v0.38.0 // indirect
 )
