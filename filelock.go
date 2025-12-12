@@ -157,6 +157,14 @@ func Remove(p string) (err error) {
 	return
 }
 
+func RemoveWithoutFatal(p string) (err error) {
+	lock(p)
+	defer unlock(p)
+
+	err = os.RemoveAll(p)
+	return
+}
+
 func ReadFile(filePath string) (data []byte, err error) {
 	lock(filePath)
 	defer unlock(filePath)
