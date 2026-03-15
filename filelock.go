@@ -40,8 +40,11 @@ func Unlock(filePath string) {
 
 func OpenFile(filePath string, flag int, perm os.FileMode) (file *os.File, err error) {
 	lock(filePath)
-
 	file, err = os.OpenFile(filePath, flag, perm)
+	if err == nil {
+		return
+	}
+	unlock(filePath)
 	if isDenied(err) {
 		logging.LogFatalf(logging.ExitCodeFileSysErr, "open file [%s] failed: %s", filePath, err)
 		return
