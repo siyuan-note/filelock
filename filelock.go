@@ -149,6 +149,30 @@ func Rename(p, newP string) (err error) {
 	return
 }
 
+func RenameWithoutFatal(p, newP string) (err error) {
+	if p == newP {
+		return nil
+	}
+
+	lock(p)
+	defer unlock(p)
+
+	if gulu.File.IsExist(newP) && gulu.File.IsDir(p) && gulu.File.IsDir(newP) {
+		err = gulu.File.Copy(p, newP)
+		if nil != err {
+			return
+		}
+		err = os.RemoveAll(p)
+		if nil != err {
+			return
+		}
+		return
+	}
+
+	err = os.Rename(p, newP)
+	return
+}
+
 func Remove(p string) (err error) {
 	lock(p)
 	defer unlock(p)
