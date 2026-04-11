@@ -20,6 +20,7 @@ import (
 	"io/fs"
 	"path/filepath"
 	"runtime"
+	"sort"
 	"strings"
 	"time"
 
@@ -81,29 +82,36 @@ func Walk(root string, fn fs.WalkDirFunc) error {
 			infos = append(infos, info)
 		}
 
-		skipFiles := map[string]bool{}
+		sort.Slice(infos, func(i, j int) bool {
+			return infos[i].Path() < infos[j].Path()
+		})
+
+		var skipPaths []string
 		for _, info := range infos {
 			p := info.Path()
-			skip := false
-			for skipFile, _ := range skipFiles {
-				if strings.HasPrefix(p, skipFile) {
-					skip = true
+
+			isSkipped := false
+			for _, sp := range skipPaths {
+				if strings.HasPrefix(p, sp) {
+					isSkipped = true
+					break
 				}
 			}
-			if skip {
-				//logging.LogInfof("skip walk [%s]", p)
+			if isSkipped {
 				continue
 			}
 
 			err = fn(p, fs.FileInfoToDirEntry(info), nil)
 			if nil != err {
-				if errors.Is(err, fs.SkipDir) || errors.Is(err, fs.SkipAll) {
-					skipFiles[p] = true
-					//logging.LogInfof("skip walk [%s]", p)
+				if errors.Is(err, fs.SkipDir) {
+					// 如果是目录且返回 SkipDir，将其加入跳过列表
+					// 注意：需要确保 p 后面带上分隔符，防止误跳过同名前缀目录
+					skipPaths = append(skipPaths, p+"/")
 					continue
 				}
-
-				logging.LogErrorf("walk [%s] failed: %s", p, err)
+				if errors.Is(err, fs.SkipAll) {
+					return nil // 彻底结束
+				}
 				return err
 			}
 		}
