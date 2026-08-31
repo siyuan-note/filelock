@@ -3,7 +3,7 @@ module github.com/siyuan-note/filelock
 go 1.25.0
 
 require (
-	github.com/88250/gulu v1.2.3-0.20260409163331-8c1dab1828ba
+	github.com/88250/gulu v1.2.3-0.20260831011033-1a37069fad34
 	github.com/siyuan-note/httpclient v0.0.0-20260813083704-4643a83d05de
 	github.com/siyuan-note/logging v0.0.0-20260513050044-06b8e04d5490
 )

@@ -94,6 +94,18 @@ func Copy(src, dest string) (err error) {
 	return
 }
 
+func CopyWritable(src, dest string) (err error) {
+	lock(src)
+	defer unlock(src)
+
+	err = gulu.File.CopyWritable(src, dest)
+	if isDenied(err) {
+		logging.LogFatalf(logging.ExitCodeFileSysErr, "copy [src=%s, dest=%s] failed: %s", src, dest, err)
+		return
+	}
+	return
+}
+
 func CopyWithoutHidden(src, dest string) (err error) {
 	lock(src)
 	defer unlock(src)

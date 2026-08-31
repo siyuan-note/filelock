@@ -1,5 +1,5 @@
-github.com/88250/gulu v1.2.3-0.20260409163331-8c1dab1828ba h1:F9nZLeLTSPUIyYrQqprqElKFef4xVI7fzjxkLXRb2Bo=
-github.com/88250/gulu v1.2.3-0.20260409163331-8c1dab1828ba/go.mod h1:D+Db16m0N7r9MLZCMcj1a0ZsEGQAxDZkadOn79Gh0vI=
+github.com/88250/gulu v1.2.3-0.20260831011033-1a37069fad34 h1:otJni0ngVaCRTzTZEbO7NtrUKREdqqTPMRighyl3q80=
+github.com/88250/gulu v1.2.3-0.20260831011033-1a37069fad34/go.mod h1:+ynqZu9Ep0aCc/wxiKIN2q0EXthGVNN94HlUNIZEVTY=
 github.com/andybalholm/brotli v1.2.3 h1:8H1qwOkl2LPfjf3YezB90JnCliZb6SInJ/OJkEbA5NQ=
 github.com/andybalholm/brotli v1.2.3/go.mod h1:rzTDkvFWvIrjDXZHkuS16NPggd91W3kUSvPlQ1pLaKY=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
